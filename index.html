@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1f6fb2">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="検修予定">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>検修予定</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#1d252c;--sub:#5b6770;--line:#d9dfe4;--ac:#1f6fb2;--acbg:#e3f0fb;--hol:#eceff1;--today:#3fa9e0;--warn:#b42318;--in:#fffbe6}
+@media (prefers-color-scheme:dark){:root{--bg:#12171b;--card:#1b2227;--tx:#e8edf0;--sub:#9aa7b0;--line:#2e3840;--ac:#6fb5ee;--acbg:#1d3345;--hol:#242c32;--warn:#ff8a7d;--in:#2b2a18}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Hiragino Sans","Yu Gothic",sans-serif;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 12px 0}
+.row{display:flex;align-items:center;gap:8px;justify-content:space-between}
+h1{font-size:17px;margin:0}
+.meta{font-size:12px;color:var(--sub)}
+button,.btn,select,input,textarea{font:inherit;color:var(--tx)}
+button,.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;min-height:40px}
+button.pri,.big{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:700}
+button.dng{color:var(--warn)}
+nav{display:flex;margin:6px -12px 0}
+nav button{flex:1;border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:8px 0;font-size:13px;color:var(--sub);min-height:44px}
+nav button.on{color:var(--ac);border-bottom-color:var(--ac);font-weight:700}
+main{padding:12px 12px calc(24px + env(safe-area-inset-bottom));max-width:720px;margin:0 auto}
+.empty{text-align:center;padding:40px 8px}
+.big{display:inline-block;border-radius:10px;padding:12px 22px;min-height:44px}
+input[type=file]{display:none}
+.stale{background:#fff3cd;color:#5c4400;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:14px}
+.warnbar{border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:14px;font-weight:700}
+.warnbar.a{background:#ffeb3b;color:#000}.warnbar.b{background:#000;color:#ff3b30}
+@media (prefers-color-scheme:dark){.stale{background:#4a3b0a;color:#ffe9a6}}
+.day{margin-bottom:14px}
+.day h2{font-size:15px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline}
+.day.today h2 span.d{background:var(--today);color:#fff;border-radius:999px;padding:0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.card .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card .no{font-size:18px;font-weight:700}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:0 8px;color:var(--sub)}
+.tag.bad{border-color:#ff3b30;color:#ff3b30;font-weight:700}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;margin:6px 0 0;font-size:14px}
+.kv dt{color:var(--sub)} .kv dd{margin:0}
+.dla{background:#000;color:#ff3b30;font-weight:700;border-radius:4px;padding:0 6px}
+.dlb{background:#ffeb3b;color:#d00;font-weight:700;border-radius:4px;padding:0 6px}
+.red{color:#ff3b30;font-weight:700}
+.note{margin-top:6px;font-size:14px;color:var(--warn)}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.ctl label{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:4px}
+.ctl select,.ctl input[type=text],.f input,.f select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--in);min-height:40px}
+.ctl input[type=text]{flex:1;min-width:120px}
+.chk{min-width:40px;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--in);font-size:18px}
+.chk.on{background:#e3f6e8;color:#0a7d2c;font-weight:700}
+.ev{display:flex;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.none{color:var(--sub);font-size:14px;margin:0 0 4px}
+.search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-bottom:10px}
+.cal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cal-h b{font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.grid .w{background:var(--card);text-align:center;font-size:12px;padding:4px 0;color:var(--sub)}
+.cell{background:var(--card);min-height:74px;padding:2px;overflow:hidden;cursor:pointer}
+.cell.hol{background:var(--hol)} .cell.out{opacity:.45} .cell.sel{outline:2px solid var(--ac);outline-offset:-2px}
+.cell .n{font-size:12px;text-align:center;margin-bottom:1px}
+.cell.today .n span{background:var(--today);color:#fff;border-radius:999px;padding:0 6px}
+.chip{display:block;font-size:10px;line-height:1.25;color:#fff;border-radius:3px;padding:0 2px;margin-bottom:1px;white-space:nowrap;overflow:hidden}
+.more{font-size:10px;color:var(--sub);text-align:center}
+.detail{margin-top:12px}.detail h3,.sec h3{font-size:15px;margin:0 0 6px}
+.sec{margin-bottom:16px}
+.f{display:grid;grid-template-columns:5.5em 1fr;gap:6px 8px;align-items:center;margin:8px 0}
+.f label{font-size:13px;color:var(--sub)}
+.f input,.f select{width:100%}
+.help{font-size:12px;color:var(--sub);margin:2px 0 8px}
+.mini{font-size:13px;color:var(--sub)}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="row"><h1>検修予定</h1><div class="meta" id="meta"></div></div>
+  <nav id="nav" hidden></nav>
+</header>
+<main id="main"></main>
+<input id="file" type="file" accept=".json,application/json,text/plain">
+<input id="file2" type="file" accept=".json,application/json,text/plain">
+<script>
+'use strict';
+// このページは、ネットには何も送らない。データは、このスマホの中(ブラウザの保存領域)にだけ保存される。
+var CPTXT='',CPLBL='',DATA=null, OVR={}, PLANS=[], ROSTER=[], tab='week', cy=0, cm=0, selDay='', Q='', editIdx=-1, TODAY_FIX=null;
+var TABS=[['week','今週'],['cal','カレンダー'],['rep','検修中'],['mon','今月搬入'],['plan','予定'],['set','データ']];
+var KEYS={data:'ks2_data',ovr:'ks2_ovr',plans:'ks2_plans',roster:'ks2_roster'};
+var $=function(id){return document.getElementById(id)};
+function lsGet(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+// ---- 日付(UTCの0時で持つ。夏時間などで狂わないように)
+function P(s){var m=/^(\d{4})-(\d\d)-(\d\d)/.exec(s||'');return m?new Date(Date.UTC(+m[1],m[2]-1,+m[3])):null}
+function I(d){return d.toISOString().slice(0,10)}
+function SER(s){var d=typeof s==='string'?P(s):s;return d?Math.round((d-Date.UTC(1899,11,30))/864e5):null}
+function addD(s,n){return I(new Date(P(s).getTime()+n*864e5))}
+function md(s){var d=P(s);return d?(d.getUTCMonth()+1)+'/'+d.getUTCDate():esc(s)}
+var W=['日','月','火','水','木','金','土'];
+function todayStr(){if(TODAY_FIX)return TODAY_FIX;var n=new Date();return n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2)}
+// ---- 稼働日(WORKDAY.INTL と同じ)
+var HOL={};
+function isOff(d){var wd=(d.getUTCDay()+6)%7;return (DATA.設定.週休||'0000000').charAt(wd)==='1'||HOL[I(d)]===1}
+function wdays(s,n){var d=P(s);if(!d)return '';var step=n>=0?1:-1,k=Math.abs(n);while(k>0){d=new Date(d.getTime()+step*864e5);if(!isOff(d))k--}return I(d)}
+function nz(v){return v==null||v===''?0:+v}
+// ---- 1両ぶんの計算(作業_入場順と同じ)
+function derive(c){
+  var o=OVR[c.キー]||{};
+  var g=function(f){return (f in o)?o[f]:c[f]};
+  var cl=g('区分')||'';
+  var num=cl?(DATA.設定.区分名.indexOf(cl.replace(/　/g,' ').trim())+1):0;
+  var nin=(!c.一覧||!num)?1:nz(c.搬入日数[num-1]);
+  var nout=null;
+  if(c.一覧)nout=num?nz(c.搬出日数[num-1]):Math.max.apply(null,c.搬出日数.map(nz));
+  var 搬入日=c.解体日?wdays(c.解体日,nin):'';
+  var 搬出期限=(c.出場期限日&&nout!==null)?wdays(c.出場期限日,-nout):'';
+  return {c:c,key:c.キー,車号:c.車号,区分:cl,搬入日:搬入日,搬出期限:搬出期限,解体日:c.解体日,
+    出場車号:c.出場未定==1?'未定':c.出場車号,特記:g('特記')||'',自動:c.自動特記||'',在庫:g('在庫')||'',検修場:g('検修場')||'',加工場:g('加工場')||'',状態:g('状態')||'',
+    順:c.車号順,並び:SER(c.並び日)||0};
+}
+function allCars(){return DATA.車.map(derive)}
+function lists(){
+  var t=todayStr(), ts=SER(t), set=DATA.設定, cars=allCars();
+  var wd0=(P(t).getUTCDay()+6)%7, mon=addD(t,-wd0), days=[0,1,2,3,4].map(function(i){return addD(mon,i)});
+  var week=days.map(function(d){
+    var L=cars.filter(function(x){return x.搬入日===d&&x.状態!=='削除済'}).sort(function(a,b){return a.順-b.順});
+    return {日付:d,車:L.slice(0,3),あと:Math.max(0,L.length-3)};
+  });
+  var rep=cars.filter(function(x){return x.搬入日&&x.状態!=='削除済'&&SER(x.搬入日)+nz(set.検修ずらし)<=ts});
+  rep.forEach(function(x){x.sk=(x.搬出期限?SER(x.搬出期限):99999)*1e8+x.並び*1000+x.順});
+  rep.sort(function(a,b){return a.sk-b.sk});
+  var m0=t.slice(0,8)+'01', d0=P(m0), m1=I(new Date(Date.UTC(d0.getUTCFullYear(),d0.getUTCMonth()+1,0)));
+  var inM=function(s){return s&&s>=m0&&s<=m1};
+  var mon2=cars.filter(function(x){return x.搬入日&&(inM(x.搬入日)||inM(x.解体日))});
+  mon2.sort(function(a,b){return (SER(a.搬入日)*1000+a.順)-(SER(b.搬入日)*1000+b.順)});
+  return {week:week,rep:rep,mon:mon2.slice(0,15),monAll:mon2,cars:cars,today:t};
+}
+// ---- 予定入力(予定のくり返しと、担当の名前)
+function effA(p){var a=(p.繰り返し||'').trim();return a?a:(p.日付?'なし':'')}
+function wdn(s){return P(s).getUTCDay()+1}      // 日=1 … 土=7(Excelの WEEKDAY と同じ)
+function planOn(p,d){
+  if(!(p.内容||'').trim())return false;
+  var a=effA(p);if(!a)return false;
+  if(p.開始&&d<p.開始)return false;
+  if(p.終了&&d>p.終了)return false;
+  var c=({'日':1,'月':2,'火':3,'水':4,'木':5,'金':6,'土':7})[(p.曜日||'').trim().charAt(0)]||0;
+  var dd=P(d), day=dd.getUTCDate();
+  if(a==='なし')return p.日付===d;
+  if(a==='毎週')return c>0&&wdn(d)===c;
+  if(a==='毎月○日')return +p.日n===day;
+  if(a==='毎月第○曜日')return c>0&&wdn(d)===c&&Math.floor((day-1)/7)+1===+p.日n;
+  return false;
+}
+function mod(a,b){return ((a%b)+b)%b}
+function planName(p,d,gridStart){
+  var cnt=ROSTER.length;if(!(p.担当||'').trim()||!cnt)return '';
+  var a=effA(p), A=P(p.開始||gridStart), dd=P(d), c=({'日':1,'月':2,'火':3,'水':4,'木':5,'金':6,'土':7})[(p.曜日||'').trim().charAt(0)]||0, n=1;
+  var md_=(dd.getUTCFullYear()-A.getUTCFullYear())*12+dd.getUTCMonth()-A.getUTCMonth()+1;
+  if(a==='毎週'){var s0=new Date(A.getTime()+mod(c-wdn(I(A)),7)*864e5);n=Math.floor((dd-s0)/864e5/7)+1}
+  else if(a==='毎月○日'){n=md_-(A.getUTCDate()>+p.日n?1:0)}
+  else if(a==='毎月第○曜日'){var first=new Date(Date.UTC(A.getUTCFullYear(),A.getUTCMonth(),1));var th=new Date(first.getTime()+(mod(c-wdn(I(first)),7)+(+p.日n-1)*7)*864e5);n=md_-(th<A?1:0)}
+  var off=0,k=ROSTER.indexOf((p.担当||'').trim());if(k>=0)off=k;
+  return ' : '+ROSTER[mod(n-1+off,cnt)];
+}
+function gridStartOf(monthFirst){var d=P(monthFirst);return I(new Date(d.getTime()-d.getUTCDay()*864e5))}
+function planEvents(day,gridStart){
+  var r=[];PLANS.forEach(function(p){if(planOn(p,day))r.push({日:day,種別:(p.種別||'').trim()||'その他',内容:(p.内容||'')+((p.種別||'').trim()?' '+(p.種別||'').trim():' ')+planName(p,day,gridStart)})});
+  return r;
+}
+function evOf(day,L,gridStart){
+  var r=[];
+  L.cars.forEach(function(x){if(x.搬入日===day&&x.状態!=='削除済')r.push({日:day,種別:'搬入',内容:x.車号+' 搬入'})});
+  (DATA.出場||[]).forEach(function(e){if(e.日===day)r.push({日:day,種別:'出場',内容:e.表示})});
+  (DATA.車輪搬入||[]).forEach(function(e){if(e.日===day)r.push({日:day,種別:'車輪搬入',内容:e.文})});
+  return r.concat(planEvents(day,gridStart));
+}
+// ---- 表示
+function dl(s){
+  if(!s)return {c:'red',t:'未定'};
+  var diff=SER(s)-SER(todayStr()),c='';
+  if(diff<=DATA.設定.近日A)c='dla';else if(diff<=DATA.設定.近日B)c='dlb';
+  return {c:c,t:md(s)};
+}
+function kv(k,v){return v===''||v==null?'':'<dt>'+k+'</dt><dd>'+v+'</dd>'}
+function opt(list,cur){var h='<option value=""></option>';list.forEach(function(v){h+='<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>'});return h}
+function car(x,mode){
+  var d=dl(x.搬出期限);
+  var h='<div class="card"><div class="top"><span class="no">'+esc(x.車号)+'</span>'+(x.区分?'<span class="tag">'+esc(x.区分)+'</span>':'<span class="tag bad">区分未設定</span>')+'</div><dl class="kv">';
+  h+=kv('搬入日',x.搬入日?md(x.搬入日):'')+kv('出場車',x.出場車号==='未定'?'<span class="red">未定</span>':esc(x.出場車号))+kv('搬出期限','<span class="'+d.c+'">'+d.t+'</span>');
+  if(mode==='rep')h+=kv('車輪在庫',esc(x.在庫));
+  h+='</dl>';
+  var nt=(x.特記&&x.自動)?x.特記+'　'+x.自動:(x.特記||x.自動);
+  if(mode!=='mon'&&mode!=='rep'&&nt)h+='<div class="note">'+esc(nt)+'</div>';
+  if((mode==='mon'||mode==='rep')&&x.自動)h+='<div class="note">'+esc(x.自動)+'</div>';
+  var k=esc(x.key);
+  if(mode==='mon'){
+    h+='<div class="ctl"><label>解体区分<select data-f="区分" data-k="'+k+'">'+opt(DATA.設定.区分名,x.区分)+'</select></label><input type="text" data-f="特記" data-k="'+k+'" placeholder="特記事項" value="'+esc(x.特記)+'"></div>';
+  }
+  if(mode==='rep'){
+    h+='<div class="ctl"><label>車輪在庫<select data-f="在庫" data-k="'+k+'">'+opt(['現場あり','未到着','//'],x.在庫)+'</select></label>'+
+       '<label>検修場<button class="chk'+(x.検修場?' on':'')+'" data-tg="検修場" data-k="'+k+'">'+(x.検修場?'✔':'')+'</button></label>'+
+       '<label>加工場<button class="chk'+(x.加工場?' on':'')+'" data-tg="加工場" data-k="'+k+'">'+(x.加工場?'✔':'')+'</button></label></div>'+
+       '<div class="ctl"><input type="text" data-f="特記" data-k="'+k+'" placeholder="特記事項" value="'+esc(x.特記)+'"><button class="pri" data-done="'+k+'">検修済</button></div>';
+  }
+  return h+'</div>';
+}
+function color(k){return (DATA.色&&(DATA.色[k]||DATA.色['その他']))||'#5b9bd5'}
+function render(){
+  if(!DATA){
+    $('nav').hidden=true;$('meta').textContent='';
+    $('main').innerHTML='<div class="empty"><p>パソコンで書き出したデータファイル(検修予定_日付.json)を選んでください。</p><label class="big" for="file">データを読み込む</label><p class="mini">読み込んだデータは、このスマホの中にだけ保存されます。ネットには送りません。</p></div>';
+    return;
+  }
+  var nav='';TABS.forEach(function(t){nav+='<button data-t="'+t[0]+'" class="'+(tab===t[0]?'on':'')+'">'+t[1]+'</button>'});
+  $('nav').innerHTML=nav;$('nav').hidden=false;
+  $('meta').textContent='データ '+(DATA.作成||'');
+  var L=lists(),h='';
+  if(tab==='week')h=viewWeek(L);else if(tab==='cal')h=viewCal(L);else if(tab==='rep')h=viewList(L,'rep');else if(tab==='mon')h=viewList(L,'mon');else if(tab==='plan')h=viewPlan();else h=viewSet(L);
+  $('main').innerHTML=h;
+}
+function warn(L){
+  var n=L.cars.filter(function(x){return x.搬入日&&x.状態!=='削除済'&&SER(x.搬入日)+nz(DATA.設定.検修ずらし)<=SER(L.today)}).length,s=DATA.設定,h='';
+  if(n>=s.警告B)h='<div class="warnbar b">検修中輪軸が'+n+'両です。上限の'+s.警告B+'両に達しています。</div>';
+  else if(n>=s.警告A)h='<div class="warnbar a">検修中輪軸が'+n+'両になりました。上限は'+s.警告B+'両です。</div>';
+  return h;
+}
+function viewWeek(L){
+  var h=warn(L),t=L.today,last=L.week[4].日付;
+  var mk=(DATA.基準日||'');
+  if(mk&&mk<L.week[0].日付)h+='<div class="stale">このデータは '+md(mk)+' に書き出したものです。最新のデータを書き出して読み込み直すと、工程表の変更が反映されます。</div>';
+  var gs=gridStartOf(t.slice(0,8)+'01');
+  L.week.forEach(function(d){
+    h+='<section class="day'+(d.日付===t?' today':'')+'"><h2><span class="d">'+md(d.日付)+'</span><span>('+W[P(d.日付).getUTCDay()]+')</span></h2>';
+    var any=false;
+    d.車.forEach(function(x){any=true;h+=car(x,'week')});
+    var oth=[];
+    (DATA.出場||[]).forEach(function(e){if(e.日===d.日付)oth.push(e.表示)});
+    (DATA.車輪搬入||[]).forEach(function(e){if(e.日===d.日付)oth.push(e.文)});
+    planEvents(d.日付,gs).forEach(function(e){oth.push(e.内容)});
+    if(d.あと)oth.push('(搬入あと'+d.あと+'両)');
+    if(oth.length){any=true;h+='<div class="card"><div class="mini">その他の予定</div>'+oth.map(esc).join('<br>')+'</div>'}
+    if(!any)h+='<p class="none">予定なし</p>';
+    h+='</section>';
+  });
+  return h;
+}
+function viewList(L,mode){
+  var src=mode==='rep'?L.rep:L.monAll;
+  var h='<input class="search" id="q" type="search" placeholder="車号で探す" value="'+esc(Q)+'">';
+  if(mode==='rep')h=warn(L)+'<p class="mini">検修中 '+L.rep.length+'両(搬出期限の早い順)</p>'+h;
+  else h='<p class="mini">今月 '+L.monAll.length+'両(搬入日の順)</p>'+cpBox()+h;
+  return h+'<div id="list">'+listBody(src,mode)+'</div>';
+}
+// ---- タスクボード用の文字(1行=1両: 「車号 12/3搬入　1/25搬出」)
+function cpLines(off){
+  var t=todayStr(),d=P(t.slice(0,8)+'01'),a=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+off,1)),b=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+off+1,0));
+  var m0=I(a),m1=I(b);
+  var L=allCars().filter(function(x){return x.搬入日&&x.搬入日>=m0&&x.搬入日<=m1&&x.状態!=='削除済'});
+  L.sort(function(x,y){return (SER(x.搬入日)*1000+x.順)-(SER(y.搬入日)*1000+y.順)});
+  return {label:(a.getUTCMonth()+1)+'月',text:L.map(function(x){return x.車号+' '+md(x.搬入日)+'搬入'+(x.搬出期限?'　'+md(x.搬出期限)+'搬出':'')}).join('\n'),n:L.length};
+}
+function cpBox(){
+  var h='<div class="sec"><h3>タスクボード用の文字</h3><div class="btnrow">'+[['今月',0],['来月',1],['再来月',2],['3ヶ月後',3]].map(function(x){return '<button data-cp="'+x[1]+'">'+x[0]+'('+cpLines(x[1]).label+')</button>'}).join('')+'</div>';
+  if(CPTXT)h+='<p class="mini">'+esc(CPLBL)+'(コピーしました。うまくいかない時は、下の文字を長押ししてコピーしてください)</p><textarea id="cptext" readonly rows="8" style="width:100%;font-size:15px">'+esc(CPTXT)+'</textarea>';
+  return h+'</div>';
+}
+function listBody(src,mode){
+  var q=Q.trim(),h='',n=0;
+  src.forEach(function(x){if(q&&(x.車号+' '+x.出場車号).indexOf(q)<0)return;n++;h+=car(x,mode)});
+  return n?h:'<p class="none">該当なし</p>';
+}
+function viewCal(L){
+  var hol=HOL,first=cy+'-'+('0'+(cm+1)).slice(-2)+'-01',gs=gridStartOf(first),t=L.today;
+  var h='<div class="cal-h"><button id="pm">◀</button><b>'+cy+'年'+(cm+1)+'月</b><button id="nm">▶</button></div><div class="grid">';
+  W.forEach(function(w){h+='<div class="w">'+w+'</div>'});
+  for(var i=0;i<42;i++){
+    var s=addD(gs,i),ev=evOf(s,L,gs);
+    h+='<div class="cell'+(+s.slice(5,7)-1!==cm?' out':'')+(hol[s]?' hol':'')+(s===t?' today':'')+(s===selDay?' sel':'')+'" data-d="'+s+'"><div class="n"><span>'+(+s.slice(8))+'</span></div>';
+    ev.slice(0,3).forEach(function(e){h+='<span class="chip" style="background:'+color(e.種別)+'">'+esc(e.内容)+'</span>'});
+    if(ev.length>3)h+='<div class="more">ほか'+(ev.length-3)+'件</div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  if(selDay){
+    h+='<div class="detail"><h3>'+md(selDay)+'('+W[P(selDay).getUTCDay()]+')</h3>';
+    var e2=evOf(selDay,L,gs);
+    if(!e2.length)h+='<p class="none">予定なし</p>';
+    e2.forEach(function(e){h+='<div class="ev"><span class="dot" style="background:'+color(e.種別)+'"></span><span>'+esc(e.内容)+'</span></div>'});
+    h+='</div>';
+  }
+  return h;
+}
+var RP=['','なし','毎週','毎月○日','毎月第○曜日'];
+function planLine(p){
+  var a=effA(p),w=a==='なし'?md(p.日付):a==='毎週'?'毎週'+p.曜日:a==='毎月○日'?'毎月'+p.日n+'日':a==='毎月第○曜日'?'毎月第'+p.日n+p.曜日+'曜':'(くり返し未設定)';
+  return w;
+}
+function viewPlan(){
+  var h='<div class="sec"><h3>予定の一覧</h3>';
+  if(!PLANS.length)h+='<p class="none">予定はまだありません。</p>';
+  PLANS.forEach(function(p,i){
+    h+='<div class="card"><div class="top"><b>'+esc(p.内容)+'</b><span class="tag">'+esc(p.種別||'その他')+'</span></div><div class="mini">'+esc(planLine(p))+(p.担当?' / 担当 '+esc(p.担当):'')+((p.開始||p.終了)?' / '+(p.開始?md(p.開始):'')+'〜'+(p.終了?md(p.終了):''):'')+'</div><div class="btnrow"><button data-pe="'+i+'">直す</button></div></div>';
+  });
+  h+='<div class="btnrow"><button class="pri" data-pe="-2">予定を足す</button></div></div>';
+  if(editIdx!==-1){
+    var p=editIdx>=0?PLANS[editIdx]:{繰り返し:'',日付:'',曜日:'',日n:'',種別:'',内容:'',開始:'',終了:'',担当:''};
+    h+='<div class="card" id="pform"><h3 style="margin:0 0 6px">'+(editIdx>=0?'予定を直す':'予定を足す')+'</h3><div class="f">'+
+      '<label>くり返し</label><select id="pf_a">'+opt(RP.slice(1),p.繰り返し)+'</select>'+
+      '<label>日付</label><input type="date" id="pf_b" value="'+esc(p.日付)+'">'+
+      '<label>曜日</label><select id="pf_c">'+opt(W,p.曜日)+'</select>'+
+      '<label>日/第n</label><input type="number" id="pf_d" min="1" max="31" value="'+esc(p.日n)+'">'+
+      '<label>種別(色)</label><input type="text" id="pf_e" list="kinds" value="'+esc(p.種別)+'"><datalist id="kinds">'+Object.keys(DATA.色||{}).map(function(k){return '<option>'+esc(k)+'</option>'}).join('')+'</datalist>'+
+      '<label>内容</label><input type="text" id="pf_f" value="'+esc(p.内容)+'">'+
+      '<label>開始日</label><input type="date" id="pf_g" value="'+esc(p.開始)+'">'+
+      '<label>終了日</label><input type="date" id="pf_h" value="'+esc(p.終了)+'">'+
+      '<label>担当</label><input type="text" id="pf_i" value="'+esc(p.担当)+'" placeholder="○ か 最初の人の名前">'+
+      '</div><p class="help">くり返しが「なし」は日付、「毎週」は曜日、「毎月○日」は日/第n、「毎月第○曜日」は曜日と第n(1〜5)を入れます。</p>'+
+      '<div class="btnrow"><button class="pri" data-psave="1">保存</button><button data-pcancel="1">やめる</button>'+(editIdx>=0?'<button class="dng" data-pdel="1">削除</button>':'')+'</div></div>';
+  }
+  h+='<div class="sec"><h3>担当の名簿(上から順に回る)</h3><input type="text" id="roster" class="search" value="'+esc(ROSTER.join(','))+'" placeholder="Aさん,Bさん,Cさん"><p class="help">名前を「,」で区切って入れます(最大10人)。</p></div>';
+  return h;
+}
+function viewSet(L){
+  var n=Object.keys(OVR).length;
+  return '<div class="sec"><h3>データ</h3><p class="mini">パソコンで書き出した日時: '+esc(DATA.作成||'')+'<br>車: '+DATA.車.length+'両 / スマホで入れた変更: '+n+'件</p>'+
+    '<div class="btnrow"><label class="btn pri" for="file">新しいデータを読み込む</label></div></div>'+
+    '<div class="sec"><h3>スマホの入力内容のバックアップ</h3><p class="help">スマホで入れた解体区分・特記・検修済・予定を、ファイルに書き出します。機種変更や、画面のデータを消す前に使います。</p>'+
+    '<div class="btnrow"><button id="bk">書き出す</button><label class="btn" for="file2">読み込む</label></div></div>'+
+    '<div class="sec"><h3>消す</h3><div class="btnrow"><button class="dng" id="clrovr">スマホで入れた変更だけ消す</button><button class="dng" id="clrall">全部消す</button></div></div>'+
+    '<p class="mini">・このスマホの中にだけ保存されています。ネットには送っていません。<br>・機密のデータです。スマホの画面ロックをかけて使ってください。<br>・工程表の貼り替えと計算は、パソコンのExcelで行います。</p>';
+}
+// ---- 保存と読み込み
+function saveAll(){lsSet(KEYS.ovr,OVR);lsSet(KEYS.plans,PLANS);lsSet(KEYS.roster,ROSTER)}
+function setO(k,f,v){OVR[k]=OVR[k]||{};OVR[k][f]=v;saveAll()}
+function loadData(obj,keep){
+  if(!obj||obj.version!==2||!obj.車||!obj.設定)throw new Error('v2');
+  DATA=obj;HOL={};DATA.設定.休日.forEach(function(s){HOL[s]=1});
+  if(keep==='start'){}
+  else if(!keep){OVR={};PLANS=(obj.予定||[]).slice();ROSTER=(obj.名簿||[]).slice()}
+  else{PLANS=(obj.予定||[]).concat(PLANS.filter(function(p){return p.端末}));ROSTER=(obj.名簿||[]).slice()}   // 残す場合も、パソコンの予定入力は新しくする(スマホで足した予定だけ残す)
+  var ok=lsSet(KEYS.data,DATA);saveAll();
+  var n=P(todayStr());cy=n.getUTCFullYear();cm=n.getUTCMonth();selDay=todayStr();
+  if(!ok)alert('このスマホには、データを保存できませんでした(保存領域が使えません)。画面を閉じると消えます。');
+}
+function readFile(f,cb){var r=new FileReader();r.onload=function(){try{cb(JSON.parse(String(r.result).replace(/^﻿/,'')))}catch(x){alert('このファイルは読めませんでした。パソコンで「スマホ用に書き出す」を実行して作ったファイルを選んでください。')}};r.readAsText(f,'utf-8')}
+document.addEventListener('click',function(e){
+  var t=e.target, b=t.closest('[data-t]');
+  if(b){tab=b.getAttribute('data-t');editIdx=-1;Q='';render();window.scrollTo(0,0);return}
+  var c=t.closest('.cell');if(c){selDay=c.getAttribute('data-d');render();return}
+  if(t.id==='pm'){cm--;if(cm<0){cm=11;cy--}render();return}
+  if(t.id==='nm'){cm++;if(cm>11){cm=0;cy++}render();return}
+  var tg=t.closest('[data-tg]');if(tg){var k=tg.getAttribute('data-k'),f=tg.getAttribute('data-tg'),c0=DATA.車.filter(function(x){return x.キー===k})[0],cur=derive(c0)[f];setO(k,f,cur?'':'✔');render();return}
+  var cpb=t.closest('[data-cp]');if(cpb){var r0=cpLines(+cpb.getAttribute('data-cp'));CPTXT=r0.text;CPLBL=r0.label+' '+r0.n+'両';render();
+    var ta=$('cptext');if(ta&&CPTXT){var ok=false;try{ta.focus();ta.select();ta.setSelectionRange(0,99999);ok=document.execCommand('copy')}catch(x){}
+      if(!ok&&navigator.clipboard){try{navigator.clipboard.writeText(CPTXT)}catch(x){}}}
+    return}
+  var dn=t.closest('[data-done]');if(dn){var k2=dn.getAttribute('data-done'),c1=DATA.車.filter(function(x){return x.キー===k2})[0];
+    if(confirm(c1.車号+' を検修済にして、検修中の一覧から消します。よろしいですか?')){setO(k2,'状態','削除済');render()}return}
+  var pe=t.closest('[data-pe]');if(pe){editIdx=+pe.getAttribute('data-pe');render();var f0=$('pform');if(f0)f0.scrollIntoView();return}
+  if(t.closest('[data-pcancel]')){editIdx=-1;render();return}
+  if(t.closest('[data-pdel]')){if(confirm('この予定を削除します。よろしいですか?')){PLANS.splice(editIdx,1);editIdx=-1;saveAll();render()}return}
+  if(t.closest('[data-psave]')){
+    var v=function(id){return $(id).value||''},p={繰り返し:v('pf_a'),日付:v('pf_b'),曜日:v('pf_c'),日n:v('pf_d'),種別:v('pf_e').trim(),内容:v('pf_f').trim(),開始:v('pf_g'),終了:v('pf_h'),担当:v('pf_i').trim(),端末:1};
+    if(!p.内容){alert('内容を入れてください。');return}
+    if(!p.繰り返し&&!p.日付){alert('くり返しか日付を入れてください。');return}
+    if(editIdx>=0)PLANS[editIdx]=p;else PLANS.push(p);
+    editIdx=-1;saveAll();render();return}
+  if(t.id==='bk'){var blob=new Blob([JSON.stringify({kind:'ks2-backup',ovr:OVR,plans:PLANS,roster:ROSTER})],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='検修予定_スマホ入力_'+todayStr().replace(/-/g,'')+'.json';document.body.appendChild(a);a.click();a.remove();return}
+  if(t.id==='clrovr'){if(confirm('スマホで入れた変更(解体区分・特記・検修済など)を消します。よろしいですか?')){OVR={};saveAll();render()}return}
+  if(t.id==='clrall'){if(confirm('このスマホに保存したデータを、全部消します。よろしいですか?')){try{localStorage.clear()}catch(x){}DATA=null;OVR={};PLANS=[];ROSTER=[];render()}return}
+});
+document.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.id==='file'){var f=t.files&&t.files[0];if(!f)return;
+    readFile(f,function(o){var keep=false,n=Object.keys(OVR).length;if(DATA&&n>0)keep=confirm('スマホで入れた変更が'+n+'件あります。\nOK = 残して新しいデータを読み込む\nキャンセル = 消して読み込む');loadData(o,keep);tab='week';render()});t.value='';return}
+  if(t.id==='file2'){var f2=t.files&&t.files[0];if(!f2)return;
+    readFile(f2,function(o){if(o.kind!=='ks2-backup'){alert('スマホの入力内容のバックアップではありません。');return}OVR=o.ovr||{};PLANS=o.plans||[];ROSTER=o.roster||[];saveAll();render()});t.value='';return}
+  if(t.id==='roster'){ROSTER=t.value.split(/[,、，]/).map(function(s){return s.trim()}).filter(Boolean).slice(0,10);saveAll();render();return}
+  var k=t.getAttribute&&t.getAttribute('data-k'),f3=t.getAttribute&&t.getAttribute('data-f');
+  if(k&&f3){setO(k,f3,t.value);render()}
+});
+document.addEventListener('input',function(e){
+  if(e.target.id==='q'){Q=e.target.value;var s=lists(),mode=tab;$('list').innerHTML=listBody(mode==='rep'?s.rep:s.monAll,mode)}
+});
+(function(){
+  var m=/[?&]today=(\d{4}-\d\d-\d\d)/.exec(location.search);if(m)TODAY_FIX=m[1];
+  var d=lsGet(KEYS.data);
+  if(d){try{OVR=lsGet(KEYS.ovr)||{};PLANS=lsGet(KEYS.plans)||[];ROSTER=lsGet(KEYS.roster)||[];loadData(d,'start')}catch(x){DATA=null}}
+  render();
+})();
+window.__t={cpLines:cpLines,lists:lists,derive:derive,evOf:evOf,planEvents:planEvents,gridStartOf:gridStartOf,load:function(o){loadData(o,false)},render:render};
+</script>
+<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}</script>
+</body>
+</html>
